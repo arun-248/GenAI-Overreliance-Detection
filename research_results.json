@@ -1,0 +1,8 @@
+{
+  "model_results": [["Ridge Regression", 0.8364, 1.1002, 0.1828], ["Random Forest", 0.7694, 1.0509, 0.2544], ["Gradient Boosting", 0.7972, 1.0546, 0.2491], ["XGBoost", 0.7965, 1.0674, 0.2308], ["MLP Regressor", 1.0050, 1.2393, -0.0368]],
+  "cv_results": {"MAE": 0.842, "RMSE": 1.142, "R²": 0.266},
+  "cv_folds": null,
+  "class_metrics": [["Low", 0.55, 0.55], ["Medium", 0.61, 0.86], ["High", 0.57, 0.16]],
+  "gan_results": {"Real only (Random Forest)": [0.7694, 1.0509, 0.2544], "Real + CTGAN synthetic": [0.7703, 1.0853, 0.2048]},
+  "noise_results": [[0, 0.7694, 1.0509, 0.2544], [5, 0.7734, 1.0532, 0.2512], [10, 0.7802, 1.0713, 0.2251], [15, 0.7692, 1.0726, 0.2233]]
+}
