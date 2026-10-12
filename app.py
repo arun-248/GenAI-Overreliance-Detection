@@ -29,12 +29,17 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 import numpy as np
 import pandas as pd
-try:
-    import shap
-    SHAP_BACKEND = f"shap {shap.__version__}"
-except Exception:  # for example numba blocked by Windows Application Control
+if os.environ.get("OVERRELIANCE_USE_BUILTIN_SHAP", "").strip().lower() in {"1", "true", "yes"}:
+    # optional switch (for example on small hosting plans): skip importing shap/numba and use the built-in TreeSHAP
     shap = None
-    SHAP_BACKEND = "the built-in TreeSHAP implementation (the shap package could not be imported)"
+    SHAP_BACKEND = "the built-in TreeSHAP implementation (selected by OVERRELIANCE_USE_BUILTIN_SHAP)"
+else:
+    try:
+        import shap
+        SHAP_BACKEND = f"shap {shap.__version__}"
+    except Exception:  # for example numba blocked by Windows Application Control
+        shap = None
+        SHAP_BACKEND = "the built-in TreeSHAP implementation (the shap package could not be imported)"
 import streamlit as st
 
 
@@ -109,6 +114,32 @@ FEATURE_META = {
     "Remorse": ("Remorse", "How much remorse do you feel after relying on AI for academic work?"),
     "Regret": ("Regret", "How much do you regret relying on AI instead of your own effort?"),
     "Task_Regret": ("Task Regret", "How much do you regret using AI for specific tasks you could have done yourself?"),
+}
+
+STEP_PROMPTS = {
+    0: ("Let's start with your study background",
+        "These details give context to your estimate. Choose the option that fits you best.",
+        "Choose one option for each question"),
+    1: ("How do you usually work with AI when you study?",
+        "Think about a typical week of coursework, not your best or your worst day.",
+        "Rate each statement from 1 (very low) to 7 (very high)"),
+    2: ("How do you feel about thinking things through without AI?",
+        "Be honest about your confidence and comfort when an AI tool is not available.",
+        "Rate each statement from 1 (very low) to 7 (very high)"),
+    3: ("What is your learning experience like when you use AI?",
+        "Consider how AI affects your efficiency, satisfaction and time.",
+        "Rate each statement from 1 (very low) to 7 (very high)"),
+    4: ("How does using AI feel, mentally and emotionally?",
+        "Reflect on mental effort, workload and any regrets after relying on AI.",
+        "Rate each statement from 1 (very low) to 7 (very high)"),
+}
+
+CATEGORY_Q = {
+    "Gender": "Gender",
+    "Field_of_Study": "Which field are you studying?",
+    "AI_Experience": "How long have you been using AI tools?",
+    "AI_Usage_Frequency": "How often do you use AI tools for your studies?",
+    "CGPA": "What is your current CGPA?",
 }
 
 ASSESS_STEPS = [
@@ -558,6 +589,43 @@ button[kind="secondary"], button[data-testid="stBaseButton-secondary"] { backgro
   .st-key-features [data-testid="stColumn"], .st-key-features [data-testid="column"] { flex:1 1 100% !important; min-width:100% !important; }
   .block-container { padding:.6rem .7rem 1.5rem .7rem !important; }
 }
+/* ===== readable form widgets (work with a light or a dark Streamlit base theme) ===== */
+[data-testid="stWidgetLabel"], [data-testid="stWidgetLabel"] p, [data-testid="stWidgetLabel"] label, [data-testid="stWidgetLabel"] span { color:#142B55 !important; font-weight:600; font-size:.96rem; line-height:1.4; }
+[data-testid="stTooltipIcon"] svg, [data-testid="stTooltipHoverTarget"] svg { color:#5A7096 !important; stroke:#5A7096 !important; }
+div[data-baseweb="select"] > div { background:#FFFFFF !important; border:1px solid #BCD3F8 !important; border-radius:12px !important; color:#142B55 !important; min-height:48px; }
+div[data-baseweb="select"] span, div[data-baseweb="select"] div, div[data-baseweb="select"] input { color:#142B55 !important; -webkit-text-fill-color:#142B55 !important; }
+div[data-baseweb="select"] svg { fill:#425B82 !important; color:#425B82 !important; }
+div[data-baseweb="popover"] ul, div[data-baseweb="popover"] [role="listbox"], div[data-baseweb="menu"] { background:#FFFFFF !important; }
+div[data-baseweb="popover"] li, div[data-baseweb="popover"] [role="option"] { background:#FFFFFF !important; color:#142B55 !important; }
+div[data-baseweb="popover"] li:hover, div[data-baseweb="popover"] [role="option"]:hover, [role="option"][aria-selected="true"] { background:#E5F1FF !important; }
+[data-testid="stNumberInput"] [data-baseweb="input"], [data-testid="stNumberInput"] [data-baseweb="base-input"], [data-testid="stNumberInput"] > div > div { background:#FFFFFF !important; border:1px solid #BCD3F8 !important; border-radius:12px !important; }
+[data-testid="stNumberInput"] input, [data-testid="stTextArea"] textarea, [data-testid="stTextInput"] input, textarea { background:#FFFFFF !important; color:#142B55 !important; -webkit-text-fill-color:#142B55 !important; }
+[data-testid="stNumberInput"] button { background:#E5F1FF !important; color:#142B55 !important; }
+[data-testid="stNumberInput"] button svg { fill:#142B55 !important; }
+[data-testid="stTextArea"] [data-baseweb="textarea"], [data-testid="stTextArea"] [data-baseweb="base-input"] { background:#FFFFFF !important; border:1px solid #BCD3F8 !important; border-radius:12px !important; }
+textarea::placeholder { color:#8FA6C9 !important; -webkit-text-fill-color:#8FA6C9 !important; }
+[data-testid="stSlider"] [data-testid="stSliderThumbValue"], [data-testid="stSlider"] [data-testid="stTickBarMin"], [data-testid="stSlider"] [data-testid="stTickBarMax"] { color:#142B55 !important; }
+[data-testid="stCheckbox"] label, [data-testid="stCheckbox"] p, [data-testid="stCheckbox"] span { color:#142B55 !important; }
+[data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] p { color:#425B82 !important; }
+div[data-testid="stProgress"] p { color:#142B55 !important; font-weight:600; }
+div[data-testid="stProgress"] [role="progressbar"] > div { background:#C9DAF3 !important; border-radius:99px; }
+div[data-testid="stProgress"] [role="progressbar"] > div > div { background:linear-gradient(90deg,#3F7BF2,#8757E8) !important; border-radius:99px; }
+
+/* assessment section header (a real question, not a small caption) */
+.q-card { display:flex; gap:18px; align-items:flex-start; padding:24px 26px; border-radius:22px; background:linear-gradient(135deg,#E5F1FF 0%,#F0E7FF 60%,#FFE7D5 130%); border:1px solid rgba(255,255,255,.9); box-shadow:0 12px 30px rgba(20,43,85,.08); margin:6px 0 4px 0; }
+.q-num { flex:0 0 52px; width:52px; height:52px; border-radius:16px; background:linear-gradient(135deg,#3F7BF2,#2457D6); color:#fff; font-weight:800; font-size:1.4rem; display:flex; align-items:center; justify-content:center; box-shadow:0 8px 18px rgba(52,120,246,.35); }
+.q-kicker { color:#109A8A; font-size:.72rem; font-weight:800; letter-spacing:.14em; text-transform:uppercase; margin-bottom:4px; }
+.q-title { color:#142B55; font-size:1.55rem; font-weight:800; line-height:1.25; letter-spacing:-.01em; }
+.q-sub { color:#425B82; font-size:1rem; line-height:1.55; margin-top:6px; }
+.q-hint { display:inline-block; margin-top:12px; padding:6px 14px; border-radius:999px; background:#FFFFFF; color:#2457D6; font-weight:700; font-size:.82rem; border:1px solid #CFE0FB; }
+
+/* sidebar illustration + caption: stacked so no word is split */
+.side-art { display:flex; flex-direction:column; align-items:center; text-align:center; gap:2px; margin:10px 0 4px 0; }
+.side-art svg { width:66%; height:auto; flex:0 0 auto; display:block; }
+.side-art p { margin:2px 8px 16px 8px; font-size:.88rem; line-height:1.4; word-break:normal; overflow-wrap:normal; hyphens:none; }
+
+/* invisible helper that scrolls the page back to the top after navigation */
+.st-key-scrollhook { position:absolute; height:0; width:0; overflow:hidden; margin:0; padding:0; }
 button:focus-visible, input:focus-visible, textarea:focus-visible, [role="slider"]:focus-visible { outline:2px solid #2B63D6 !important; outline-offset:2px; }
 </style>
 """
@@ -1161,8 +1229,34 @@ def remember(key):
     st.session_state["_sticky"][key] = st.session_state.get(key)
 
 
+SCROLL_JS = (
+    "<script>(function(){function up(){var els=[document.querySelector('[data-testid=\"stMain\"]'),"
+    "document.querySelector('section.main'),document.querySelector('[data-testid=\"stAppViewContainer\"]'),"
+    "document.scrollingElement,document.documentElement,document.body];"
+    "els.forEach(function(e){if(e){try{e.scrollTop=0;if(e.scrollTo){e.scrollTo(0,0);}}catch(_){}}});"
+    "try{window.scrollTo(0,0);}catch(_){}}up();setTimeout(up,60);setTimeout(up,250);})();</script>"
+)
+
+
+def scroll_to_top(token):
+    """Scroll the page to the top (runs once after a navigation click; the token makes the element new each time)."""
+    try:
+        st.html(f"{SCROLL_JS}<!-- scroll {token} -->", unsafe_allow_javascript=True)
+    except TypeError:  # older Streamlit versions without unsafe_allow_javascript
+        import streamlit.components.v1 as components
+        components.html(SCROLL_JS.replace("document.", "window.parent.document.").replace("window.scrollTo", "window.parent.scrollTo"), height=0)
+    except Exception:
+        logger.exception("scroll-to-top helper failed")
+
+
+def request_scroll_top():
+    st.session_state["_scroll_pending"] = True
+    st.session_state["_scroll_n"] = st.session_state.get("_scroll_n", 0) + 1
+
+
 def goto(page):
     st.session_state["nav"] = page
+    request_scroll_top()
 
 
 def change_step(delta):
@@ -1170,6 +1264,7 @@ def change_step(delta):
     if delta > 0 and current < len(ASSESS_STEPS):
         st.session_state["confirmed"].add(current)
     st.session_state["step"] = int(min(max(current + delta, 0), len(ASSESS_STEPS)))
+    request_scroll_top()
 
 
 def start_intervention():
@@ -1222,6 +1317,7 @@ def reset_assessment():
 
 def jump_step(index):
     st.session_state["step"] = int(index)
+    request_scroll_top()
 
 
 def run_assessment():
@@ -1644,14 +1740,14 @@ def render_field(feat):
         sticky(key, options[0])
         if st.session_state.get(key) not in options:
             st.session_state[key] = options[0]
-        st.selectbox(label, options, key=key, help=tip, format_func=str, on_change=remember, args=(key,))
+        st.selectbox(CATEGORY_Q.get(feat, label), options, key=key, help=tip, format_func=str, on_change=remember, args=(key,))
     elif feat == "CGPA":
         sticky(key, 3.30)
-        st.number_input(label, min_value=2.31, max_value=4.00, step=0.01, format="%.2f",
+        st.number_input(CATEGORY_Q.get("CGPA", label), min_value=2.31, max_value=4.00, step=0.01, format="%.2f",
                         key=key, help=tip, on_change=remember, args=(key,))
     else:
         sticky(key, 4)
-        st.select_slider(label, options=[1, 2, 3, 4, 5, 6, 7], key=key, help=tip,
+        st.select_slider(tip or label, options=[1, 2, 3, 4, 5, 6, 7], key=key, help=f"Topic: {label}. 1 = very low, 7 = very high.",
                          format_func=lambda v: f"{v} · {LIKERT[v]}", on_change=remember, args=(key,))
     remember(key)
 
@@ -1748,7 +1844,14 @@ def page_assess():
     st.progress((step + 1) / n, text=f"Step {step + 1} of {n} · Assessment progress: {progress}%")
 
     _, section_name, section_sub, features = ASSESS_STEPS[step]
-    md_html(f'<div class="card tight"><h4>{section_name}</h4><p>{section_sub}</p></div>')
+    q_title, q_sub, q_hint = STEP_PROMPTS.get(step, (section_name, section_sub, ""))
+    md_html(
+        f'<div class="q-card"><div class="q-num">{step + 1}</div><div>'
+        f'<div class="q-kicker">Section {step + 1} of {n} · {esc(section_name)}</div>'
+        f'<div class="q-title">{esc(q_title)}</div><div class="q-sub">{esc(q_sub)}</div>'
+        + (f'<div class="q-hint">{esc(q_hint)}</div>' if q_hint else "")
+        + '</div></div>'
+    )
     if step > 0:
         md_html(f'<div style="margin-top:10px"><span class="eyebrow">Scale</span>{legend_html()}</div>')
     st.write("")
@@ -2772,5 +2875,9 @@ with st.container(key="shell"):
     if show_right:
         with shell_cols[2]:
             render_right_panel(_current)
+
+if st.session_state.pop("_scroll_pending", False):
+    with st.container(key="scrollhook"):
+        scroll_to_top(st.session_state.get("_scroll_n", 0))
 
 render_footer()
