@@ -19,6 +19,7 @@ import logging
 import math
 import os
 import re
+import zlib
 from pathlib import Path
 
 import joblib
@@ -626,6 +627,33 @@ div[data-testid="stProgress"] [role="progressbar"] > div > div { background:line
 
 /* invisible helper that scrolls the page back to the top after navigation */
 .st-key-scrollhook { position:absolute; height:0; width:0; overflow:hidden; margin:0; padding:0; }
+/* arrows drawn with CSS (crisp, always inside the button, no font glyphs) */
+.st-key-assess_next button p::after, .st-key-top_cta button p::after, .st-key-home_start button p::after, .st-key-why_iv button p::after, .st-key-iv_profile button p::after, .st-key-prof_mi button p::after, .st-key-feat_btn_0 button p::after, .st-key-feat_btn_1 button p::after, .st-key-feat_btn_2 button p::after, .st-key-feat_btn_3 button p::after {
+  content:""; display:inline-block; width:18px; height:18px; margin-left:8px; vertical-align:-3px; background-color:currentColor;
+  -webkit-mask:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 12h15m-6-6 6 6-6 6' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 12h15m-6-6 6 6-6 6' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat;
+}
+.st-key-feat_btn_0 button p, .st-key-feat_btn_1 button p, .st-key-feat_btn_2 button p, .st-key-feat_btn_3 button p { font-size:0; margin:0; }
+.st-key-feat_btn_0 button p::after, .st-key-feat_btn_1 button p::after, .st-key-feat_btn_2 button p::after, .st-key-feat_btn_3 button p::after { margin-left:0; vertical-align:middle; }
+
+/* Back / Next row: Back on the left edge, Next on the right edge, same size */
+.st-key-assess_back button, .st-key-assess_next button { min-width:150px; min-height:46px; border-radius:14px; font-weight:700; }
+.st-key-assess_next [data-testid="stButton"] { display:flex; justify-content:flex-end; }
+/* feature cards: the whole card is clickable (invisible button covers it) and opens a detail page */
+.st-key-feat_btn_0, .st-key-feat_btn_1, .st-key-feat_btn_2, .st-key-feat_btn_3 { position:absolute !important; top:0 !important; left:0 !important; right:0 !important; bottom:0 !important; width:100% !important; height:100% !important; z-index:5; margin:0 !important; }
+.st-key-feat_btn_0 [data-testid="stButton"], .st-key-feat_btn_1 [data-testid="stButton"], .st-key-feat_btn_2 [data-testid="stButton"], .st-key-feat_btn_3 [data-testid="stButton"] { position:static !important; width:100% !important; height:100% !important; }
+.st-key-feat_btn_0 button, .st-key-feat_btn_1 button, .st-key-feat_btn_2 button, .st-key-feat_btn_3 button { width:100% !important; height:100% !important; min-height:100% !important; opacity:0; border-radius:22px !important; cursor:pointer; box-shadow:none !important; }
+.st-key-feat0:focus-within, .st-key-feat1:focus-within, .st-key-feat2:focus-within, .st-key-feat3:focus-within { outline:2px solid #2B63D6; outline-offset:3px; }
+.feat-more { margin-top:14px; font-weight:700; font-size:.92rem; display:inline-flex; align-items:center; gap:6px; }
+.feat-more::after { content:""; width:18px; height:18px; background-color:currentColor; -webkit-mask:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 12h15m-6-6 6 6-6 6' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat; mask:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 12h15m-6-6 6 6-6 6' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/contain no-repeat; transition:transform .18s ease; }
+.st-key-feat0:hover .feat-more::after, .st-key-feat1:hover .feat-more::after, .st-key-feat2:hover .feat-more::after, .st-key-feat3:hover .feat-more::after { transform:translateX(4px); }
+.feat-desc { padding-right:0 !important; }
+.feat-hero { display:flex; gap:22px; align-items:center; padding:26px 28px; border-radius:26px; border:1px solid rgba(255,255,255,.9); box-shadow:0 12px 30px rgba(20,43,85,.08); margin:12px 0 18px 0; }
+.feat-hero .feat-ic { width:76px; height:76px; margin:0; flex:0 0 76px; }
+.feat-hero .feat-ic svg { width:36px; height:36px; }
+.feat-hero h2 { margin:2px 0 6px 0; font-size:1.9rem; color:#142B55; }
+.feat-hero p { margin:0; color:#425B82; font-size:1.02rem; line-height:1.55; }
+.feat-list { margin:8px 0 0 0; padding-left:20px; color:#425B82; line-height:1.9; }
 button:focus-visible, input:focus-visible, textarea:focus-visible, [role="slider"]:focus-visible { outline:2px solid #2B63D6 !important; outline-offset:2px; }
 </style>
 """
@@ -1008,6 +1036,78 @@ INTERVENTION_EXTRAS = {
 }
 
 
+# Several example tasks per activity. The one shown depends on the student's answers and field of study,
+# and the student can cycle through the others with "Show another example".
+INTERVENTION_EXAMPLES = {
+    "Verification Challenge": [
+        "Why does a larger sample size reduce the standard error of the mean? Write your own answer first, then compare it with an AI answer.",
+        "Pick a concept from your {field} coursework and explain it in your own words before asking AI. Then compare the two explanations.",
+        "Choose a claim you recently read in {field} and decide whether it is true before asking AI to confirm it.",
+        "Explain the difference between correlation and causation with an example from {field}, then check an AI answer for mistakes.",
+    ],
+    "Independent Problem-Solving Task": [
+        "Pick a problem from your coursework and work on it unaided for five minutes, noting each step you try.",
+        "Take a practice question from {field} and write the first three steps of your solution before opening any AI tool.",
+        "Choose a past assignment question in {field}, solve it from scratch and mark where you got stuck.",
+        "Estimate the answer to a numerical question related to {field} using only what you already know, then check it.",
+    ],
+    "Guided Independent Reasoning": [
+        "Explain why a model can perform well on training data but poorly on new data.",
+        "Pick a key idea from {field}, restate it in your own words, then list what you already know about it.",
+        "Take a question you would normally ask AI about {field}. Write the question, what you know, and your best guess.",
+        "Describe step by step how you would approach an unfamiliar problem in {field} before consulting anything.",
+    ],
+    "Critical Analysis Task": [
+        "Ask an AI to summarise the advantages of a method you are studying, then list its assumptions and any claims without evidence.",
+        "Take an AI answer about a {field} topic and find one statement that needs a source.",
+        "Ask AI for a short argument on a debated topic in {field}, then identify what evidence is missing.",
+        "Compare an AI summary with your textbook section on the same {field} topic and note the differences.",
+    ],
+    "AI Output Verification Task": [
+        "Take one factual claim from an AI answer (a definition, a number or a date) and find two reliable sources for it.",
+        "Ask AI to cite sources for a {field} claim, then check that at least one source really exists and says that.",
+        "Pick a formula or rule used in {field} and verify AI's version against your notes or textbook.",
+        "Take AI's explanation of a {field} term and confirm it against a trusted glossary or lecture slide.",
+    ],
+    "Guided Reasoning Question": [
+        "Why might a high correlation between two variables not mean that one causes the other?",
+        "In {field}, why might a method that works in one situation fail in another? Write two or three sentences before consulting AI.",
+        "Explain in your own words why a recent topic from your {field} class matters.",
+        "What is one assumption behind a method you use in {field}, and what happens if it is wrong?",
+    ],
+    "Independent Idea Generation": [
+        "Suggest three ways to make a study group more effective.",
+        "Write three project ideas related to {field} before asking AI for any.",
+        "List three ways to explain a hard {field} concept to a friend, using your own examples.",
+        "Brainstorm three questions you could ask your instructor about {field}, then rank them.",
+    ],
+    "Reflective AI-Use Question": [
+        "Think of your last AI-assisted assignment. Which parts could you explain today without AI?",
+        "Recall a time AI saved you effort in {field}. Did you still understand the material afterwards?",
+        "Which {field} task do you reach for AI on first? What would happen if you tried it alone first?",
+        "When did AI last give you an answer you did not fully understand? What did you do next?",
+        "Name one habit in how you use AI that you want to keep, and one you want to change.",
+    ],
+    "Responsible AI Use Guidance": [
+        "Choose one upcoming task and decide in advance which part you will do first without AI.",
+        "Write two rules for yourself about when AI is allowed in your {field} coursework.",
+        "List three tasks where AI helps you learn and one where it may replace your thinking.",
+        "Plan how you will check AI output the next time you use it for {field}.",
+    ],
+}
+
+
+def pick_example(name, input_row, offset=0):
+    """Return (example text, position, total). Depends on the student's answers, field of study and the 'another example' counter."""
+    pool = INTERVENTION_EXAMPLES.get(name) or []
+    if not pool:
+        return "", 0, 0
+    field = str(input_row.get("Field_of_Study", "")).strip() or "your field"
+    seed = zlib.crc32(repr([(k, str(input_row[k])) for k in sorted(input_row.index)]).encode("utf-8"))
+    index = (seed + int(offset)) % len(pool)
+    return pool[index].replace("{field}", field), index + 1, len(pool)
+
+
 # ============================================================
 # SHAP EXPLANATION  (logic preserved; baseline + aggregation added)
 # ============================================================
@@ -1230,21 +1330,24 @@ def remember(key):
 
 
 SCROLL_JS = (
-    "<script>(function(){function up(){var els=[document.querySelector('[data-testid=\"stMain\"]'),"
+    "<script>(function(){var token=__TOKEN__;function up(){var els=[document.querySelector('[data-testid=\"stMain\"]'),"
     "document.querySelector('section.main'),document.querySelector('[data-testid=\"stAppViewContainer\"]'),"
     "document.scrollingElement,document.documentElement,document.body];"
     "els.forEach(function(e){if(e){try{e.scrollTop=0;if(e.scrollTo){e.scrollTo(0,0);}}catch(_){}}});"
-    "try{window.scrollTo(0,0);}catch(_){}}up();setTimeout(up,60);setTimeout(up,250);})();</script>"
+    "try{window.scrollTo(0,0);}catch(_){}}up();var n=0;var t=setInterval(function(){up();n+=1;if(n>8){clearInterval(t);}},100);})();</script>"
 )
 
 
 def scroll_to_top(token):
-    """Scroll the page to the top (runs once after a navigation click; the token makes the element new each time)."""
+    """Scroll the page to the top after a navigation click.
+    The token sits inside the script text: the sanitiser removes HTML comments, so without it the content would be
+    identical on every click and the browser would not run the script again."""
+    js = SCROLL_JS.replace("__TOKEN__", str(int(token)))
     try:
-        st.html(f"{SCROLL_JS}<!-- scroll {token} -->", unsafe_allow_javascript=True)
+        st.html(js, unsafe_allow_javascript=True)
     except TypeError:  # older Streamlit versions without unsafe_allow_javascript
         import streamlit.components.v1 as components
-        components.html(SCROLL_JS.replace("document.", "window.parent.document.").replace("window.scrollTo", "window.parent.scrollTo"), height=0)
+        components.html(js.replace("document.", "window.parent.document.").replace("window.scrollTo", "window.parent.scrollTo"), height=0)
     except Exception:
         logger.exception("scroll-to-top helper failed")
 
@@ -1257,6 +1360,15 @@ def request_scroll_top():
 def goto(page):
     st.session_state["nav"] = page
     request_scroll_top()
+
+
+def open_feature(index):
+    st.session_state["feature_idx"] = int(index)
+    goto("Feature")
+
+
+def next_example():
+    st.session_state["iv_example_n"] = st.session_state.get("iv_example_n", 0) + 1
 
 
 def change_step(delta):
@@ -1277,6 +1389,7 @@ def reset_intervention():
         store.pop(k, None)
         st.session_state.pop(k, None)
     st.session_state["iv_started"] = False
+    st.session_state["iv_example_n"] = 0
 
 
 def collect_inputs():
@@ -1404,18 +1517,18 @@ def chart_card(question):
 
 
 def gauge_svg(score, color):
-    radius = 88
+    radius = 100
     circumference = 2 * math.pi * radius
     frac = min(max((score - 1) / 6, 0), 1)
     dash = circumference * frac
     return f"""
-    <svg width="250" height="250" viewBox="0 0 240 240" role="img" aria-label="AI reliance score {score:.2f} out of 7">
+    <svg width="290" height="290" viewBox="0 0 260 260" style="max-width:100%;height:auto" role="img" aria-label="AI reliance score {score:.2f} out of 7">
     <defs><linearGradient id="gg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3478F6"/><stop offset="1" stop-color="{color}"/></linearGradient></defs>
-    <circle cx="120" cy="120" r="{radius}" fill="none" stroke="#D9E6F7" stroke-width="16"/>
-    <circle cx="120" cy="120" r="{radius}" fill="none" stroke="url(#gg)" stroke-width="16" stroke-linecap="round" stroke-dasharray="{dash:.1f} {circumference:.1f}" transform="rotate(-90 120 120)"/>
-    <text x="120" y="76" text-anchor="middle" font-family="Inter,Segoe UI,sans-serif" font-size="11" font-weight="700" letter-spacing="2" fill="#425B82">ESTIMATED SCORE</text>
-    <text x="120" y="130" text-anchor="middle" font-family="Inter,Segoe UI,sans-serif" font-size="52" font-weight="800" fill="#142B55">{score:.2f}</text>
-    <text x="120" y="158" text-anchor="middle" font-family="Inter,Segoe UI,sans-serif" font-size="16" fill="#425B82">out of 7</text>
+    <circle cx="130" cy="130" r="{radius}" fill="none" stroke="#D9E6F7" stroke-width="16"/>
+    <circle cx="130" cy="130" r="{radius}" fill="none" stroke="url(#gg)" stroke-width="16" stroke-linecap="round" stroke-dasharray="{dash:.1f} {circumference:.1f}" transform="rotate(-90 130 130)"/>
+    <text x="130" y="94" text-anchor="middle" font-family="Inter,Segoe UI,sans-serif" font-size="10" font-weight="700" letter-spacing="1.2" fill="#425B82">ESTIMATED SCORE</text>
+    <text x="130" y="150" text-anchor="middle" font-family="Inter,Segoe UI,sans-serif" font-size="54" font-weight="800" fill="#142B55">{score:.2f}</text>
+    <text x="130" y="180" text-anchor="middle" font-family="Inter,Segoe UI,sans-serif" font-size="16" fill="#425B82">out of 7</text>
     </svg>
     """
 
@@ -1559,7 +1672,7 @@ ART_FOR_PAGE = {
 
 
 def render_navbar(current):
-    mode = "Home" if current == "Home" else ("Student" if current in STUDENT_SET else "Research")
+    mode = "Home" if current in ("Home", "Feature") else ("Student" if current in STUDENT_SET else "Research")
     with st.container(key="topnav"):
         cols = st.columns([2.9, 0.9, 1.75, 2.0, 1.4], gap="small")
         with cols[0]:
@@ -1576,7 +1689,7 @@ def render_navbar(current):
                       on_click=goto, args=("Model Insights",))
         with cols[4]:
             with st.container(key="nav_cta"):
-                st.button("Get Started →", key="top_cta", on_click=goto, args=("Assess",))
+                st.button("Get Started", key="top_cta", on_click=goto, args=("Assess",))
 
 
 def render_left_panel(current):
@@ -1682,7 +1795,7 @@ def page_home():
         a1, a2, a3 = st.columns(3, gap="medium")
         with a1:
             with st.container(key="act1"):
-                st.button("Try the assessment →", icon=":material/assignment:", on_click=goto, args=("Assess",), key="home_start")
+                st.button("Try the assessment", icon=":material/assignment:", on_click=goto, args=("Assess",), key="home_start")
         with a2:
             with st.container(key="act2"):
                 st.button("Explore model results", icon=":material/bar_chart:", on_click=goto, args=("Model Insights",), key="home_models")
@@ -1698,8 +1811,9 @@ def page_home():
         for i, (col, (title, desc, page, bg, icon)) in enumerate(zip(cols, FEATURES)):
             with col:
                 with st.container(key=f"feat{i}"):
-                    md_html(f'<div class="feat-ic" style="background:{bg}">{icon}</div><div class="feat-title">{title}</div><div class="feat-desc">{desc}</div>')
-                    st.button("→", key=f"feat_btn_{i}", help=f"Open: {page}", on_click=goto, args=(page,))
+                    md_html(f'<div class="feat-ic" style="background:{bg}">{icon}</div><div class="feat-title">{title}</div>'
+                            f'<div class="feat-desc">{desc}</div><div class="feat-more" style="color:{FEATURE_ACCENTS[i]}">Learn more</div>')
+                    st.button(f"Learn more about {title}", key=f"feat_btn_{i}", on_click=open_feature, args=(i,))
 
     section_title("Student experience", "Five steps from self-report to a personalised learning activity.")
     steps = [
@@ -1806,7 +1920,7 @@ def render_review():
     st.write("")
     b1, b2, b3 = st.columns([1, 1, 2])
     with b1:
-        st.button("← Back", on_click=change_step, args=(-1,), key="assess_back")
+        st.button("Back", icon=":material/arrow_back:", on_click=change_step, args=(-1,), key="assess_back")
     with b2:
         st.button("Start over", on_click=reset_assessment, key="assess_reset")
     with b3:
@@ -1862,12 +1976,12 @@ def page_assess():
             render_field(feat)
 
     st.write("")
-    back_col, _, next_col = st.columns([1, 2, 1.3])
+    back_col, _, next_col = st.columns([1, 3, 1.4])
     with back_col:
         if step > 0:
-            st.button("← Back", on_click=change_step, args=(-1,), key="assess_back")
+            st.button("Back", icon=":material/arrow_back:", on_click=change_step, args=(-1,), key="assess_back")
     with next_col:
-        st.button("Review answers →" if step == n - 1 else "Next →", type="primary",
+        st.button("Review answers" if step == n - 1 else "Next", type="primary",
                   on_click=change_step, args=(1,), key="assess_next")
 
 
@@ -2040,7 +2154,7 @@ def page_why():
         )
 
     st.write("")
-    st.button("Continue to my intervention →", type="primary", on_click=goto, args=("Intervention",), key="why_iv")
+    st.button("Continue to my intervention", type="primary", on_click=goto, args=("Intervention",), key="why_iv")
 
 
 # ---------------- INTERVENTION ----------------
@@ -2082,12 +2196,16 @@ def page_intervention():
     st.write("")
 
     steps = lib["steps"]
-    objective, example = INTERVENTION_EXTRAS.get(name, ("Practise independent reasoning with AI as a support.", ""))
+    objective, _unused_example = INTERVENTION_EXTRAS.get(name, ("Practise independent reasoning with AI as a support.", ""))
+    example, example_pos, example_total = pick_example(name, res["input_df"].iloc[0], st.session_state.get("iv_example_n", 0))
     md_html(
         f'<div class="card"><h4>Objective</h4><p style="color:#425B82">{esc(objective)}</p>'
-        + (f'<p style="margin-top:10px"><b style="color:#1F3A68">Example task.</b> {esc(example)}</p>' if example else "")
+        + (f'<p style="margin-top:10px"><b style="color:#1F3A68">Example task.</b> {esc(example)}</p>'
+           f'<p style="margin-top:8px;font-size:.8rem">Example {example_pos} of {example_total} · chosen from your answers and field of study</p>' if example else "")
         + "</div>"
     )
+    if example_total > 1:
+        st.button("Show another example", icon=":material/autorenew:", on_click=next_example, key="iv_next_example")
     st.write("")
     if not st.session_state.get("iv_started"):
         md_html(
@@ -2140,7 +2258,7 @@ def page_intervention():
     )
     st.caption("Interventions are rule-based prototype recommendations. The stage mapping is a design choice of this prototype; "
                "longitudinal experiments are needed to test whether they reduce overreliance.")
-    st.button("View my profile →", on_click=goto, args=("Student Profile",), key="iv_profile")
+    st.button("View my profile", on_click=goto, args=("Student Profile",), key="iv_profile")
 
 
 # ---------------- STUDENT PROFILE ----------------
@@ -2221,7 +2339,7 @@ def page_profile():
         """
     )
     st.write("")
-    st.button("Explore model insights →", on_click=goto, args=("Model Insights",), key="prof_mi")
+    st.button("Explore model insights", on_click=goto, args=("Model Insights",), key="prof_mi")
 
 
 # ---------------- MODEL INSIGHTS ----------------
@@ -2825,6 +2943,97 @@ def page_testing():
         st.caption("Optional views use only genuine files exported from your notebooks. Nothing is generated or simulated.")
 
 
+FEATURE_ACCENTS = ["#2457D6", "#6A3FD0", "#0F7A66", "#C2570C"]
+FEATURE_TARGETS = [("Assess", "Start the assessment"), ("Why This Result?", "See my explanation"),
+                   ("Student Profile", "Open my profile"), ("Intervention", "Open my intervention")]
+
+
+def feature_details():
+    rf = next((r for r in MODEL_RESULTS if r[0] == "Random Forest"), MODEL_RESULTS[0])
+    return [
+        {
+            "tagline": "A Random Forest regression model turns your answers into an estimated AI Reliance Score on a 1–7 scale.",
+            "does": "Estimates how closely your self-reported habits resemble higher or lower AI reliance in the training data, and shows the result with a relative intervention level (Low, Moderate or High).",
+            "how": "Your 22 answers (18 numeric including CGPA, 4 categorical) go through the saved preprocessing pipeline and a Random Forest of 300 trees. It was trained on 394 cleaned student records and is never retrained inside this app.",
+            "careful": f"On held-out data the model explains about {rf[3] * 100:.0f}% of variance (R² {rf[3]:.3f}, MAE {rf[1]:.3f}). It is an estimate, not a diagnosis, and recall for the High level is limited (about 0.16).",
+            "see": ["A gauge with your estimated score out of 7", "Where you sit on the Low / Moderate / High scale", "A plain-language interpretation and its limitations"],
+            "extra": "",
+        },
+        {
+            "tagline": "SHAP shows which of your answers pushed the estimate up or down.",
+            "does": "Breaks your prediction into a contribution from each question, measured against the model's baseline (its average prediction).",
+            "how": "SHAP values from the saved Random Forest are added up so that baseline + contributions equals your score. The app checks this reconstruction every time it explains a result.",
+            "careful": "These are influential predictors inside the model, not causes. A factor that pushes the estimate up does not mean it causes AI dependence.",
+            "see": ["The top factors increasing and reducing reliance, in plain language", "A signed bar chart with a legend", "A technical SHAP table for researchers"],
+            "extra": "",
+        },
+        {
+            "tagline": "A summary of your own self-reported habits across key learning dimensions.",
+            "does": "Shows your verification, confidence, satisfaction and usage answers side by side so you can see your pattern at a glance.",
+            "how": "Seven dimensions from your assessment are drawn as a radar chart and bars on a 1–7 scale. In the research dataset (AIBT-50K), K-Means with K = 2 was used for exploratory profiling, which is kept separate from this assessment.",
+            "careful": "Insights come from questionnaire answers, not from analysis of your actual AI prompts. Cluster separation in the research dataset was weak, so those profiles are exploratory and your answers are not assigned to a cluster.",
+            "see": ["Five summary cards: reliance, verification, confidence, satisfaction and usage", "A radar chart and dimension bars", "A note on exploratory K-Means profiling"],
+            "extra": "",
+        },
+        {
+            "tagline": "A rule-based activity matched to your level and your behaviour pattern.",
+            "does": "Chooses one of nine activities from your reliance level and specific answers (for example verification or independent confidence), then guides you through it with a written answer and a reflection.",
+            "how": "Rules link your level and answers to an activity, for example High level with Accept Without Verification of 5 or more gives the Verification Challenge. Activities follow Hint, Question, Verification, Analysis and Independent Answer.",
+            "careful": "These are prototype recommendations. Completing an activity does not show that learning improved; longitudinal studies would be needed.",
+            "see": ["Risk level, behaviour trigger and recommended activity", "An objective, an example task and a step-by-step checklist", "Space for your independent answer and your reflection"],
+            "extra": (
+                '<div class="card" style="overflow-x:auto"><h4>How an activity is chosen</h4><table class="rtable">'
+                "<tr><th>Level</th><th>Condition</th><th>Activity</th></tr>"
+                "<tr><td>High</td><td>Accept Without Verification ≥ 5</td><td>Verification Challenge</td></tr>"
+                "<tr><td>High</td><td>Overreliance in Problem Solving ≥ 5</td><td>Independent Problem-Solving Task</td></tr>"
+                "<tr><td>High</td><td>Independent Confidence ≤ 3</td><td>Guided Independent Reasoning</td></tr>"
+                "<tr><td>High</td><td>otherwise</td><td>Critical Analysis Task</td></tr>"
+                "<tr><td>Moderate</td><td>Cross Check ≤ 3</td><td>AI Output Verification Task</td></tr>"
+                "<tr><td>Moderate</td><td>Independent Confidence ≤ 3</td><td>Guided Reasoning Question</td></tr>"
+                "<tr><td>Moderate</td><td>Own Ideas ≤ 3</td><td>Independent Idea Generation</td></tr>"
+                "<tr><td>Moderate</td><td>otherwise</td><td>Reflective AI-Use Question</td></tr>"
+                "<tr><td>Low</td><td>any</td><td>Responsible AI Use Guidance</td></tr></table></div>"
+            ),
+        },
+    ]
+
+
+def page_feature():
+    idx = int(st.session_state.get("feature_idx", 0)) % len(FEATURES)
+    title, _desc, _page, bg, icon = FEATURES[idx]
+    d = feature_details()[idx]
+    gradients = ["linear-gradient(135deg,#EDF5FF,#DCEBFF)", "linear-gradient(135deg,#F5EFFF,#E8DEFF)",
+                 "linear-gradient(135deg,#E9FAF2,#D5F3E5)", "linear-gradient(135deg,#FFF3E8,#FFE2CC)"]
+    st.button("Back to Home", icon=":material/arrow_back:", on_click=goto, args=("Home",), key="feat_back")
+    md_html(
+        f'<div class="feat-hero" style="background:{gradients[idx]}"><div class="feat-ic" style="background:{bg}">{icon}</div>'
+        f'<div><div class="eyebrow">Feature {idx + 1} of {len(FEATURES)}</div><h2>{esc(title)}</h2><p>{esc(d["tagline"])}</p></div></div>'
+    )
+    md_html(
+        '<div class="grid g3">'
+        + card("What it does", esc(d["does"]))
+        + card("How it works", esc(d["how"]))
+        + card("Keep in mind", esc(d["careful"]))
+        + "</div>"
+    )
+    st.write("")
+    md_html('<div class="card"><h4>What you will see</h4><ul class="feat-list">' + "".join(f"<li>{esc(x)}</li>" for x in d["see"]) + "</ul></div>")
+    if d["extra"]:
+        st.write("")
+        md_html(d["extra"])
+    st.write("")
+    target, label = FEATURE_TARGETS[idx]
+    c1, c2, _ = st.columns([1.2, 1, 2])
+    with c1:
+        if idx > 0 and st.session_state.get("result") is None:
+            st.button("Take the assessment first", icon=":material/assignment:", type="primary", on_click=goto, args=("Assess",), key="feat_try")
+        else:
+            st.button(label, type="primary", on_click=goto, args=(target,), key="feat_try")
+    with c2:
+        st.button("Explore model results" if idx == 0 else "Back to Home", on_click=goto,
+                  args=("Model Insights" if idx == 0 else "Home",), key="feat_more")
+
+
 def render_footer():
     md_html(
         """
@@ -2849,6 +3058,7 @@ PAGES = {
     "Model Insights": page_model_insights,
     "Research": page_research,
     "Testing": page_testing,
+    "Feature": page_feature,
     "About": page_about,
 }
 

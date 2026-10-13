@@ -1,0 +1,291 @@
+{
+  "generated": "2026-10-13 08:18",
+  "environment": {
+    "python": "3.11.9",
+    "streamlit": "1.65.0",
+    "scikit-learn": "1.6.1",
+    "shap": "0.44.1"
+  },
+  "tests": [
+    {
+      "id": "T01",
+      "category": "Startup",
+      "test": "Application starts on the Home page",
+      "expected": "No exceptions; Home page shown",
+      "observed": "exceptions=[], page=Home",
+      "status": "Pass"
+    },
+    {
+      "id": "T02",
+      "category": "Thresholds",
+      "test": "Risk thresholds file matches the documented values",
+      "expected": "low=3.5, high=5.0",
+      "observed": "low_threshold=3.5, high_threshold=5.0",
+      "status": "Pass"
+    },
+    {
+      "id": "T03",
+      "category": "Valid input",
+      "test": "Neutral answers (all 4, CGPA 3.30)",
+      "expected": "Score within 1-7 and Prediction page shown",
+      "observed": "neutral: score=4.240, level=Medium, page=Prediction",
+      "status": "Pass"
+    },
+    {
+      "id": "T04",
+      "category": "Boundary",
+      "test": "Lowest values (all 1, CGPA 2.31)",
+      "expected": "Score within 1-7, no error",
+      "observed": "minimum: score=1.743, level=Low, page=Prediction",
+      "status": "Pass"
+    },
+    {
+      "id": "T05",
+      "category": "Boundary",
+      "test": "Highest values (all 7, CGPA 4.00)",
+      "expected": "Score within 1-7, no error",
+      "observed": "maximum: score=5.690, level=High, page=Prediction",
+      "status": "Pass"
+    },
+    {
+      "id": "T06",
+      "category": "Validation",
+      "test": "Out-of-range values are clamped (Own_Ideas 99, CGPA 9.9)",
+      "expected": "Own_Ideas=7.0, CGPA=4.0",
+      "observed": "Own_Ideas=99 -> 7.0, CGPA=9.9 -> 4.0",
+      "status": "Pass"
+    },
+    {
+      "id": "T07",
+      "category": "Validation",
+      "test": "Missing (NaN) numeric answer falls back to neutral 4",
+      "expected": "Cross_Check=4.0, no error",
+      "observed": "Cross_Check=NaN -> 4.0",
+      "status": "Pass"
+    },
+    {
+      "id": "T08",
+      "category": "Categories",
+      "test": "Unseen category handled by the saved pipeline",
+      "expected": "Finite prediction within 1-7",
+      "observed": "prediction with unseen Gender = 4.245",
+      "status": "Pass"
+    },
+    {
+      "id": "T09",
+      "category": "Categories",
+      "test": "Unseen category handled by the app",
+      "expected": "Falls back to the first known option",
+      "observed": "Gender fell back to 'Female'",
+      "status": "Pass"
+    },
+    {
+      "id": "T10",
+      "category": "Assessment",
+      "test": "Incomplete assessment cannot be submitted",
+      "expected": "Submit disabled; no result",
+      "observed": "submit disabled=True, result=None",
+      "status": "Pass"
+    },
+    {
+      "id": "T11",
+      "category": "Assessment",
+      "test": "Complete five sections through the UI, review and submit",
+      "expected": "Review reached; submit enabled; Prediction shown",
+      "observed": "review reached=True, submit enabled=True, page=Prediction",
+      "status": "Pass"
+    },
+    {
+      "id": "T12",
+      "category": "Assessment",
+      "test": "Start over clears answers, confirmations and result",
+      "expected": "confirmed empty; result None; step 0",
+      "observed": "confirmed=set(), result=None, step=0",
+      "status": "Pass"
+    },
+    {
+      "id": "T13",
+      "category": "Assessment",
+      "test": "Repeated submission",
+      "expected": "No exception; result present",
+      "observed": "exceptions=[]",
+      "status": "Pass"
+    },
+    {
+      "id": "T14",
+      "category": "Intervention rules",
+      "test": "High level and Accept Without Verification >= 5",
+      "expected": "High level -> Verification Challenge",
+      "observed": "model score=5.016; app level=High, intervention=Verification Challenge",
+      "status": "Pass"
+    },
+    {
+      "id": "T15",
+      "category": "Intervention rules",
+      "test": "High level and Overreliance in Problem Solving >= 5",
+      "expected": "High level -> Independent Problem-Solving Task",
+      "observed": "model score=5.068; app level=High, intervention=Independent Problem-Solving Task",
+      "status": "Pass"
+    },
+    {
+      "id": "T16",
+      "category": "Intervention rules",
+      "test": "High level and Independent Confidence <= 3",
+      "expected": "High level -> Guided Independent Reasoning",
+      "observed": "model score=5.002; app level=High, intervention=Guided Independent Reasoning",
+      "status": "Pass"
+    },
+    {
+      "id": "T17",
+      "category": "Intervention rules",
+      "test": "High level, no trigger met",
+      "expected": "High level -> Critical Analysis Task",
+      "observed": "model score=5.142; app level=High, intervention=Critical Analysis Task",
+      "status": "Pass"
+    },
+    {
+      "id": "T18",
+      "category": "Intervention rules",
+      "test": "Moderate level and Cross Check <= 3",
+      "expected": "Medium level -> AI Output Verification Task",
+      "observed": "model score=3.754; app level=Medium, intervention=AI Output Verification Task",
+      "status": "Pass"
+    },
+    {
+      "id": "T19",
+      "category": "Intervention rules",
+      "test": "Moderate level and Independent Confidence <= 3",
+      "expected": "Medium level -> Guided Reasoning Question",
+      "observed": "model score=3.961; app level=Medium, intervention=Guided Reasoning Question",
+      "status": "Pass"
+    },
+    {
+      "id": "T20",
+      "category": "Intervention rules",
+      "test": "Moderate level and Own Ideas <= 3",
+      "expected": "Medium level -> Independent Idea Generation",
+      "observed": "model score=3.672; app level=Medium, intervention=Independent Idea Generation",
+      "status": "Pass"
+    },
+    {
+      "id": "T21",
+      "category": "Intervention rules",
+      "test": "Moderate level, no trigger met",
+      "expected": "Medium level -> Reflective AI-Use Question",
+      "observed": "model score=3.691; app level=Medium, intervention=Reflective AI-Use Question",
+      "status": "Pass"
+    },
+    {
+      "id": "T22",
+      "category": "Intervention rules",
+      "test": "Low level",
+      "expected": "Low level -> Responsible AI Use Guidance",
+      "observed": "model score=3.473; app level=Low, intervention=Responsible AI Use Guidance",
+      "status": "Pass"
+    },
+    {
+      "id": "T23",
+      "category": "SHAP",
+      "test": "SHAP reconstruction check on random input 1 (includes categorical features)",
+      "expected": "baseline + summed SHAP = model output within 1e-3",
+      "observed": "reconstruction caption shown",
+      "status": "Pass"
+    },
+    {
+      "id": "T24",
+      "category": "SHAP",
+      "test": "SHAP reconstruction check on random input 2 (includes categorical features)",
+      "expected": "baseline + summed SHAP = model output within 1e-3",
+      "observed": "reconstruction caption shown",
+      "status": "Pass"
+    },
+    {
+      "id": "T25",
+      "category": "SHAP",
+      "test": "SHAP reconstruction check on random input 3 (includes categorical features)",
+      "expected": "baseline + summed SHAP = model output within 1e-3",
+      "observed": "reconstruction caption shown",
+      "status": "Pass"
+    },
+    {
+      "id": "T26",
+      "category": "Failure handling",
+      "test": "SHAP failure (simulated)",
+      "expected": "Friendly message; prediction still available",
+      "observed": "friendly message shown, no traceback",
+      "status": "Pass"
+    },
+    {
+      "id": "T27",
+      "category": "Failure handling",
+      "test": "Model file missing",
+      "expected": "Friendly error; no traceback",
+      "observed": "friendly error shown, no traceback",
+      "status": "Pass"
+    },
+    {
+      "id": "T28",
+      "category": "Failure handling",
+      "test": "Thresholds and metadata files missing",
+      "expected": "Fallback notices; app still renders",
+      "observed": "fallback notices shown, app still renders",
+      "status": "Pass"
+    },
+    {
+      "id": "T29",
+      "category": "Failure handling",
+      "test": "Optional evaluation CSV files absent",
+      "expected": "No exception on Model Insights",
+      "observed": "exceptions=[]; optional CSV files present in folder: []",
+      "status": "Pass"
+    },
+    {
+      "id": "T30",
+      "category": "Navigation",
+      "test": "All ten pages render with a prediction present",
+      "expected": "No exception on any page",
+      "observed": "all 10 pages rendered",
+      "status": "Pass"
+    },
+    {
+      "id": "T31",
+      "category": "Navigation",
+      "test": "Navbar and side-panel buttons route correctly",
+      "expected": "Each button opens the expected page",
+      "observed": "navigation results=[True, True, True, True, True, True]",
+      "status": "Pass"
+    },
+    {
+      "id": "T32",
+      "category": "Intervention",
+      "test": "Activity completes only with steps, answer and reflection",
+      "expected": "Completion message appears only when all are done",
+      "observed": "not completed without answer/reflection=True; completed after steps+answer+reflection=True",
+      "status": "Pass"
+    },
+    {
+      "id": "T33",
+      "category": "Navigation",
+      "test": "Page scrolls back to the top after Next or a page change",
+      "expected": "Scroll script appears after Next, not after changing an answer",
+      "observed": "script after 1st Next=True; after 2nd Next=True; content differs between clicks (so the browser re-runs it)=True; after changing a slider=False",
+      "status": "Pass"
+    },
+    {
+      "id": "T34",
+      "category": "Home",
+      "test": "Each feature card opens its own detail page",
+      "expected": "4 cards open 4 detail pages; Back returns Home",
+      "observed": "each of the 4 cards opens its own detail page and Back returns Home: [True, True, True, True]",
+      "status": "Pass"
+    },
+    {
+      "id": "T35",
+      "category": "Intervention",
+      "test": "Example task can be changed with 'Show another example'",
+      "expected": "A different example appears",
+      "observed": "example changes after 'Show another example': True",
+      "status": "Pass"
+    }
+  ]
+}

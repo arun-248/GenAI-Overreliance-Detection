@@ -44,7 +44,7 @@ LOW, HIGH = float(thresholds["low_threshold"]), float(thresholds["high_threshold
 ENCODER = pipeline.named_steps["preprocessor"].named_transformers_["categorical"]
 CATS = {f: list(c) for f, c in zip(CATEGORICAL, ENCODER.categories_)}
 PAGES = ["Home", "Assess", "Prediction", "Why This Result?", "Intervention", "Student Profile",
-         "Model Insights", "Research", "Testing", "About"]
+         "Model Insights", "Research", "Testing", "About", "Feature"]
 
 
 def record(tid, category, name, expected, fn):
@@ -341,17 +341,50 @@ def t_intervention():
 
 
 def t_scroll():
-    def has_script(at):
-        return any("scrollTo" in str(getattr(e, "proto", e)) for e in at.get("html"))
+    def script_text(at):
+        found = [str(getattr(e, "proto", e)) for e in at.get("html") if "scrollTo" in str(getattr(e, "proto", e))]
+        return found[0] if found else None
     at = new_app()
     at.session_state["nav"] = "Assess"
     at.run()
     button(at, "assess_next").click().run()
-    after_next = has_script(at)
+    first = script_text(at)
+    button(at, "assess_next").click().run()
+    second = script_text(at)
     at.select_slider[0].set_value(5).run()
-    after_widget = has_script(at)
-    return (after_next and not after_widget and not exceptions(at)), \
-        f"scroll-to-top script present after Next={after_next}; after changing a slider={after_widget}"
+    after_widget = script_text(at)
+    ok = bool(first and second and first != second and after_widget is None and not exceptions(at))
+    return ok, (f"script after 1st Next={bool(first)}; after 2nd Next={bool(second)}; "
+                f"content differs between clicks (so the browser re-runs it)={first != second}; after changing a slider={after_widget is not None}")
+
+
+def t_features():
+    results = []
+    for i in range(4):
+        at = new_app().run()
+        button(at, f"feat_btn_{i}").click().run()
+        on_feature = at.session_state["nav"] == "Feature" and at.session_state.get("feature_idx") == i
+        has_sections = has_text(at, "What it does") and has_text(at, "How it works") and has_text(at, "Keep in mind")
+        button(at, "feat_back").click().run()
+        results.append(bool(on_feature and has_sections and at.session_state["nav"] == "Home" and not exceptions(at)))
+    return all(results), f"each of the 4 cards opens its own detail page and Back returns Home: {results}"
+
+
+def t_examples():
+    at = submit(make_inputs())
+    at.session_state["nav"] = "Intervention"
+    at.run()
+
+    def current():
+        text = " ".join(m.value for m in at.markdown)
+        marker = "Example task.</b> "
+        i = text.find(marker)
+        return text[i + len(marker): i + len(marker) + 80] if i >= 0 else None
+
+    first = current()
+    button(at, "iv_next_example").click().run()
+    second = current()
+    return bool(first and second and first != second and not exceptions(at)), f"example changes after 'Show another example': {first != second}"
 
 
 def main():
@@ -403,6 +436,8 @@ def main():
     record(f"T{base + 5:02d}", "Navigation", "Navbar and side-panel buttons route correctly", "Each button opens the expected page", t_nav)
     record(f"T{base + 6:02d}", "Intervention", "Activity completes only with steps, answer and reflection", "Completion message appears only when all are done", t_intervention)
     record(f"T{base + 7:02d}", "Navigation", "Page scrolls back to the top after Next or a page change", "Scroll script appears after Next, not after changing an answer", t_scroll)
+    record(f"T{base + 8:02d}", "Home", "Each feature card opens its own detail page", "4 cards open 4 detail pages; Back returns Home", t_features)
+    record(f"T{base + 9:02d}", "Intervention", "Example task can be changed with 'Show another example'", "A different example appears", t_examples)
 
     out = {
         "generated": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
